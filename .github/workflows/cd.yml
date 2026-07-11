@@ -3,6 +3,7 @@ on:
     branches: [main]
 
 jobs:
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -16,3 +17,19 @@ jobs:
 
       - name: Build app
         run: ./scripts/buildprod.sh
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
+      - name: 'Set up cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v3'
+      
+      - name: 'Use gcloud CLI'
+        run: 'gcloud info'
+
+      - name: 'Build and Push Docker image'
+        run: |
+          gcloud builds submit --tag ${{ secrets.GCP_REGION_PROJECT_ID }}/notely:latest .
